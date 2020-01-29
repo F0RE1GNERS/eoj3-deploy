@@ -1,0 +1,96 @@
+version: '3'
+
+services:
+  migration:
+    image: eoj3
+    env_file:
+      - 'eoj3.env'
+    volumes:
+      - 'static:/var/share'
+    entrypoint:
+      - bash
+      - "-c"
+      - "python3 manage.py migrate && rm -f /var/share/* && cp -r /eoj3/static/* /var/share/"
+  add_judge:
+    image: eoj3
+    env_file:
+      - 'eoj3.env'
+    entrypoint: python3 manage.py runscript add_judge
+  web:
+    image: eoj3
+    env_file:
+      - 'eoj3.env'
+    environment:
+      - VIRTUAL_HOST=eoj3
+      - VIRTUAL_PORT=3031
+    volumes:
+      - 'repo:/eoj3/repo'
+      - 'data:/eoj3/testdata'
+      - 'media:/eoj3/media'
+      - 'upload:/eoj3/upload'
+      - 'generate:/eoj3/generate'
+    entrypoint: uwsgi --socket :3031 --wsgi-file eoj3/wsgi.py --master --processes 4 --threads 2
+  qcluster:
+    image: eoj3
+    volumes:
+      - 'repo:/eoj3/repo'
+      - 'data:/eoj3/testdata'
+      - 'media:/eoj3/media'
+      - 'upload:/eoj3/upload'
+      - 'generate:/eoj3/generate'
+    env_file:
+      - 'eoj3.env'
+    entrypoint: python3 manage.py qcluster
+  proxy:
+    build:
+      context: "./build/front-nginx"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - 'media:/var/www/fake/media'
+      - 'upload:/var/www/fake/upload'
+      - 'generate:/var/www/fake/generate'
+      - 'static:/var/www/fake/static'
+  mysql:
+    image: 'mysql:5.7'
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: eoj
+      MYSQL_PASSWORD: eoj
+      MYSQL_DATABASE: eoj
+    volumes:
+      - 'db:/var/lib/mysql'
+      - './mysql.cnf:/etc/mysql/conf.d/custom.cnf'
+  redis:
+    image: 'redis:latest'
+  ejudge-memcached:
+    container_name: ejudge-memcached
+    image: memcached:1.5-alpine
+    restart: always
+  ejudge-app:
+    image: registry.cn-hangzhou.aliyuncs.com/ultmaster/ejudge:v3
+    container_name: ejudge-app
+    privileged: true
+    environment:
+      MEMCACHED: ejudge-memcached
+      TRACEBACK_LIMIT: 5
+      USUAL_READ_SIZE: 512
+      OUTPUT_LIMIT: 256
+      USERNAME: ejudge
+      PASSWORD: b12345678901
+    volumes:
+      - data:/ejudge/run/data:ro
+      - spj:/ejudge/run/spj
+      - judge_log:/ejudge/run/log
+volumes:
+  db:
+  repo:
+  data:
+  spj:
+  media:
+  upload:
+  generate:
+  judge_log:
+  static:
