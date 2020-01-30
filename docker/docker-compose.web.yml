@@ -4,7 +4,7 @@ services:
   migration:
     image: eoj3
     env_file:
-      - 'eoj3.env'
+      - 'eoj3.local.env'
     volumes:
       - 'static:/var/share'
     entrypoint:
@@ -14,12 +14,12 @@ services:
   add_judge:
     image: eoj3
     env_file:
-      - 'eoj3.env'
+      - 'eoj3.local.env'
     entrypoint: python3 manage.py runscript add_judge
   web:
     image: eoj3
     env_file:
-      - 'eoj3.env'
+      - 'eoj3.local.env'
     environment:
       - VIRTUAL_HOST=eoj3
       - VIRTUAL_PORT=3031
@@ -39,7 +39,7 @@ services:
       - 'upload:/eoj3/upload'
       - 'generate:/eoj3/generate'
     env_file:
-      - 'eoj3.env'
+      - 'eoj3.local.env'
     entrypoint: python3 manage.py qcluster
   proxy:
     build:
