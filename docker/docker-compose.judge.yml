@@ -1,0 +1,33 @@
+version: '3'
+
+services:
+  ejudge-memcached:
+    image: memcached:1.5-alpine
+    restart: unless-stopped
+  ejudge-app:
+    image: registry.cn-hangzhou.aliyuncs.com/ultmaster/ejudge:v3
+    restart: unless-stopped
+    privileged: true
+    env_file:
+      - 'ejudge.local.env'
+    volumes:
+      - data:/ejudge/run/data:ro
+      - spj:/ejudge/run/spj
+      - judge_log:/ejudge/run/log
+    ports:
+      - 0.0.0.0:5000:5000
+  sync-target:
+    image: panubo/docker-sshd:latest
+    environment:
+      SSH_ENABLE_ROOT: true
+    ports:
+      - 0.0.0.0:2222:22
+    volumes:
+      - ./id_rsa.pub:/root/.ssh/authorized_keys:ro
+      - data:/sync/data:ro
+      - spj:/sync/spj
+
+volumes:
+  data:
+  spj:
+  judge_log:

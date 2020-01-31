@@ -18,6 +18,7 @@ services:
     entrypoint: python3 manage.py runscript add_judge
   web:
     image: eoj3
+    restart: unless-stopped
     env_file:
       - 'eoj3.local.env'
     environment:
@@ -32,6 +33,7 @@ services:
     entrypoint: uwsgi --socket :3031 --wsgi-file eoj3/wsgi.py --master --processes 4 --threads 2
   qcluster:
     image: eoj3
+    restart: unless-stopped
     volumes:
       - 'repo:/eoj3/repo'
       - 'data:/eoj3/testdata'
@@ -42,6 +44,7 @@ services:
       - 'eoj3.local.env'
     entrypoint: python3 manage.py qcluster
   proxy:
+    restart: unless-stopped
     build:
       context: "./build/front-nginx"
     ports:
@@ -55,6 +58,7 @@ services:
       - 'static:/var/www/fake/static'
   mysql:
     image: 'mysql:5.7'
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_USER: eoj
@@ -65,23 +69,29 @@ services:
       - './mysql.cnf:/etc/mysql/conf.d/custom.cnf'
   redis:
     image: 'redis:latest'
+    restart: unless-stopped
   ejudge-memcached:
     image: memcached:1.5-alpine
-    restart: always
+    restart: unless-stopped
   ejudge-app:
     image: registry.cn-hangzhou.aliyuncs.com/ultmaster/ejudge:v3
+    restart: unless-stopped
     privileged: true
-    environment:
-      MEMCACHED: ejudge-memcached
-      TRACEBACK_LIMIT: 5
-      USUAL_READ_SIZE: 512
-      OUTPUT_LIMIT: 256
-      USERNAME: ejudge
-      PASSWORD: b12345678901
+    env_file:
+      - 'ejudge.local.env'
     volumes:
       - data:/ejudge/run/data:ro
       - spj:/ejudge/run/spj
       - judge_log:/ejudge/run/log
+  sync:
+    image: registry.cn-shanghai.aliyuncs.com/ultmaster/ejudge-sync:latest
+    restart: unless-stopped
+    container_name: lsyncd
+    volumes:
+      - data:/sync/data:ro
+      - spj:/sync/spj:ro
+      - ./id_rsa:/root/id_rsa
+      - ./lsyncd.local.conf:/root/lsyncd.conf
 volumes:
   db:
   repo:
