@@ -17,17 +17,19 @@ services:
     ports:
       - 0.0.0.0:5000:5000
   sync-target:
-    image: panubo/docker-sshd:latest
+    image: panubo/sshd:latest
     environment:
-      SSH_ENABLE_ROOT: true
+      SSH_ENABLE_ROOT: 'true'
     ports:
       - 0.0.0.0:2222:22
     volumes:
       - ./id_rsa.pub:/root/.ssh/authorized_keys:ro
-      - data:/sync/data:ro
+      - keys:/etc/ssh/keys
+      - data:/sync/data
       - spj:/sync/spj
 
 volumes:
   data:
   spj:
   judge_log:
+  keys:

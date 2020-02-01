@@ -86,7 +86,6 @@ services:
   sync:
     image: registry.cn-shanghai.aliyuncs.com/ultmaster/ejudge-sync:latest
     restart: unless-stopped
-    container_name: lsyncd
     volumes:
       - data:/sync/data:ro
       - spj:/sync/spj:ro
