@@ -117,6 +117,8 @@ server {
 	listen [::]:80;
 	access_log /var/log/nginx/access.log vhost;
 
+	client_max_body_size 10240m;
+
 	{{ if (exists (printf "/etc/nginx/vhost.d/%s" $host)) }}
 	include {{ printf "/etc/nginx/vhost.d/%s" $host }};
 	{{ end }}
