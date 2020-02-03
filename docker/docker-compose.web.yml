@@ -10,7 +10,7 @@ services:
     entrypoint:
       - bash
       - "-c"
-      - "python3 manage.py migrate && rm -f /var/share/* && cp -r /eoj3/static/* /var/share/"
+      - "python3 manage.py migrate && rm -rf /var/share/* && cp -r /eoj3/static/* /var/share/"
   add_judge:
     image: eoj3
     env_file:
